@@ -13,8 +13,8 @@ pub extern "c" fn GuiSetState(state: c_int) void;
 pub extern "c" fn GuiGetState() c_int;
 pub extern "c" fn GuiSetFont(font: rl.Font) void;
 pub extern "c" fn GuiGetFont() rl.Font;
-pub extern "c" fn GuiSetStyle(control: rgui.GuiControl, property: c_int, value: c_int) void;
-pub extern "c" fn GuiGetStyle(control: rgui.GuiControl, property: c_int) c_int;
+pub extern "c" fn GuiSetStyle(control: rgui.Control, property: c_int, value: c_int) void;
+pub extern "c" fn GuiGetStyle(control: rgui.Control, property: c_int) c_int;
 pub extern "c" fn GuiLoadStyle(fileName: [*c]const u8) void;
 pub extern "c" fn GuiLoadStyleDefault() void;
 pub extern "c" fn GuiEnableTooltip() void;
@@ -45,6 +45,7 @@ pub extern "c" fn GuiValueBox(bounds: rl.Rectangle, text: [*c]const u8, value: [
 pub extern "c" fn GuiValueBoxFloat(bounds: rl.Rectangle, text: [*c]const u8, textValue: [*c]u8, value: [*c]f32, editMode: bool) c_int;
 pub extern "c" fn GuiTextBox(bounds: rl.Rectangle, text: [*c]u8, textSize: c_int, editMode: bool) c_int;
 pub extern "c" fn GuiSlider(bounds: rl.Rectangle, textLeft: [*c]const u8, textRight: [*c]const u8, value: [*c]f32, minValue: f32, maxValue: f32) c_int;
+pub extern "c" fn GuiSliderPro(bounds: rl.Rectangle, textLeft: [*c]const u8, textRight: [*c]const u8, value: [*c]f32, minValue: f32, maxValue: f32, sliderWidth: c_int) c_int;
 pub extern "c" fn GuiSliderBar(bounds: rl.Rectangle, textLeft: [*c]const u8, textRight: [*c]const u8, value: [*c]f32, minValue: f32, maxValue: f32) c_int;
 pub extern "c" fn GuiProgressBar(bounds: rl.Rectangle, textLeft: [*c]const u8, textRight: [*c]const u8, value: [*c]f32, minValue: f32, maxValue: f32) c_int;
 pub extern "c" fn GuiStatusBar(bounds: rl.Rectangle, text: [*c]const u8) c_int;

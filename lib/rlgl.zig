@@ -266,6 +266,10 @@ pub const rl_default_shader_attrib_location_normal = @as(i32, 2);
 pub const rl_default_shader_attrib_location_color = @as(i32, 3);
 pub const rl_default_shader_attrib_location_tangent = @as(i32, 4);
 pub const rl_default_shader_attrib_location_texcoord2 = @as(i32, 5);
+pub const rl_default_shader_attrib_location_indices = @as(i32, 6);
+pub const rl_default_shader_attrib_location_boneids = @as(i32, 7);
+pub const rl_default_shader_attrib_location_boneweights = @as(i32, 5);
+pub const rl_default_shader_attrib_location_instance_tx = @as(i32, 9);
 
 /// Choose the current matrix to be transformed
 pub fn rlMatrixMode(mode: i32) void {
@@ -575,17 +579,22 @@ pub fn rlScissor(x: i32, y: i32, width: i32, height: i32) void {
     cdef.rlScissor(@as(c_int, x), @as(c_int, y), @as(c_int, width), @as(c_int, height));
 }
 
-/// Enable wire mode
-pub fn rlEnableWireMode() void {
-    cdef.rlEnableWireMode();
-}
-
 /// Enable point mode
 pub fn rlEnablePointMode() void {
     cdef.rlEnablePointMode();
 }
 
-/// Disable wire (and point) mode
+/// Disable point mode
+pub fn rlDisablePointMode() void {
+    cdef.rlDisablePointMode();
+}
+
+/// Enable wire mode
+pub fn rlEnableWireMode() void {
+    cdef.rlEnableWireMode();
+}
+
+/// Disable wire mode
 pub fn rlDisableWireMode() void {
     cdef.rlDisableWireMode();
 }
@@ -703,6 +712,11 @@ pub fn rlGetTextureIdDefault() u32 {
 /// Get default shader id
 pub fn rlGetShaderIdDefault() u32 {
     return @as(u32, cdef.rlGetShaderIdDefault());
+}
+
+/// Get default shader locations
+pub fn rlGetShaderLocsDefault() [*c]c_int {
+    return cdef.rlGetShaderLocsDefault();
 }
 
 /// Load a render batch system
@@ -836,7 +850,7 @@ pub fn rlGetGlTextureFormats(format: i32, glInternalFormat: *u32, glFormat: *u32
 }
 
 /// Get name string for pixel format
-pub fn rlGetPixelFormatName(format: u32) [*:0]const u8 {
+pub fn rlGetPixelFormatName(format: u32) [:0]const u8 {
     return std.mem.span(cdef.rlGetPixelFormatName(@as(c_uint, format)));
 }
 
@@ -856,7 +870,7 @@ pub fn rlReadTexturePixels(id: u32, width: i32, height: i32, format: i32) *anyop
 }
 
 /// Read screen pixel data (color buffer)
-pub fn rlReadScreenPixels(width: i32, height: i32) [*:0]u8 {
+pub fn rlReadScreenPixels(width: i32, height: i32) [:0]u8 {
     return std.mem.span(cdef.rlReadScreenPixels(@as(c_int, width), @as(c_int, height)));
 }
 
@@ -881,12 +895,12 @@ pub fn rlUnloadFramebuffer(id: u32) void {
 }
 
 /// Load shader from code strings
-pub fn rlLoadShaderCode(vsCode: [*:0]const u8, fsCode: [*:0]const u8) u32 {
+pub fn rlLoadShaderCode(vsCode: [:0]const u8, fsCode: [:0]const u8) u32 {
     return @as(u32, cdef.rlLoadShaderCode(@as([*c]const u8, @ptrCast(vsCode)), @as([*c]const u8, @ptrCast(fsCode))));
 }
 
 /// Compile custom shader and return shader id (type: RL_VERTEX_SHADER, RL_FRAGMENT_SHADER, RL_COMPUTE_SHADER)
-pub fn rlCompileShader(shaderCode: [*:0]const u8, ty: i32) u32 {
+pub fn rlCompileShader(shaderCode: [:0]const u8, ty: i32) u32 {
     return @as(u32, cdef.rlCompileShader(@as([*c]const u8, @ptrCast(shaderCode)), @as(c_int, ty)));
 }
 
@@ -901,12 +915,12 @@ pub fn rlUnloadShaderProgram(id: u32) void {
 }
 
 /// Get shader location uniform
-pub fn rlGetLocationUniform(shaderId: u32, uniformName: [*:0]const u8) i32 {
+pub fn rlGetLocationUniform(shaderId: u32, uniformName: [:0]const u8) i32 {
     return @as(i32, cdef.rlGetLocationUniform(@as(c_uint, shaderId), @as([*c]const u8, @ptrCast(uniformName))));
 }
 
 /// Get shader location attribute
-pub fn rlGetLocationAttrib(shaderId: u32, attribName: [*:0]const u8) i32 {
+pub fn rlGetLocationAttrib(shaderId: u32, attribName: [:0]const u8) i32 {
     return @as(i32, cdef.rlGetLocationAttrib(@as(c_uint, shaderId), @as([*c]const u8, @ptrCast(attribName))));
 }
 

@@ -14,11 +14,17 @@ test {
 
 pub const RaylibError = error{
     LoadFileData,
+    CompressData,
+    DecompressData,
+    EncodeDataBase64,
+    DecodeDataBase64,
+    ExportImageToMemory,
     LoadImageColors,
     LoadImagePalette,
     LoadFont,
     LoadFontData,
     LoadCodepoints,
+    TextSplit,
     LoadMaterial,
     LoadMaterials,
     LoadModelAnimations,
@@ -850,17 +856,17 @@ pub const Image = extern struct {
     format: PixelFormat,
 
     /// Load image from file into CPU memory (RAM)
-    pub fn init(fileName: [*:0]const u8) RaylibError!Image {
+    pub fn init(fileName: [:0]const u8) RaylibError!Image {
         return rl.loadImage(fileName);
     }
 
     /// Load image from RAW file data
-    pub fn initRaw(fileName: [*:0]const u8, width: i32, height: i32, format: PixelFormat, headerSize: i32) RaylibError!Image {
+    pub fn initRaw(fileName: [:0]const u8, width: i32, height: i32, format: PixelFormat, headerSize: i32) RaylibError!Image {
         return rl.loadImageRaw(fileName, width, height, format, headerSize);
     }
 
     /// Load image sequence from file (frames appended to image.data)
-    pub fn initAnim(fileName: [*:0]const u8, frames: *i32) RaylibError!Image {
+    pub fn initAnim(fileName: [:0]const u8, frames: *i32) RaylibError!Image {
         return rl.loadImageAnim(fileName, frames);
     }
 
@@ -880,12 +886,12 @@ pub const Image = extern struct {
     }
 
     /// Create an image from text (default font)
-    pub fn initText(text: [*:0]const u8, fontSize: i32, color: Color) RaylibError!Image {
+    pub fn initText(text: [:0]const u8, fontSize: i32, color: Color) RaylibError!Image {
         return rl.imageText(text, fontSize, color);
     }
 
     /// Create an image from text (custom sprite font)
-    pub fn initTextEx(font: Font, text: [*:0]const u8, fontSize: f32, spacing: f32, t: Color) RaylibError!Image {
+    pub fn initTextEx(font: Font, text: [:0]const u8, fontSize: f32, spacing: f32, t: Color) RaylibError!Image {
         return rl.imageTextEx(font, text, fontSize, spacing, t);
     }
 
@@ -930,7 +936,7 @@ pub const Image = extern struct {
     }
 
     /// Generate image: grayscale image from text data
-    pub fn genText(width: i32, height: i32, text: [*:0]const u8) Image {
+    pub fn genText(width: i32, height: i32, text: [:0]const u8) Image {
         return rl.genImageText(width, height, text);
     }
 
@@ -1145,22 +1151,22 @@ pub const Image = extern struct {
     }
 
     /// Draw text (using default font) within an image (destination)
-    pub fn drawText(self: *Image, text: [*:0]const u8, posX: i32, posY: i32, fontSize: i32, color: Color) void {
+    pub fn drawText(self: *Image, text: [:0]const u8, posX: i32, posY: i32, fontSize: i32, color: Color) void {
         rl.imageDrawText(self, text, posX, posY, fontSize, color);
     }
 
     /// Draw text (custom sprite font) within an image (destination)
-    pub fn drawTextEx(self: *Image, font: Font, text: [*:0]const u8, position: Vector2, fontSize: f32, spacing: f32, t: Color) void {
+    pub fn drawTextEx(self: *Image, font: Font, text: [:0]const u8, position: Vector2, fontSize: f32, spacing: f32, t: Color) void {
         rl.imageDrawTextEx(self, font, text, position, fontSize, spacing, t);
     }
 
     /// Export image data to file, returns true on success
-    pub fn exportToFile(self: Image, fileName: [*:0]const u8) bool {
+    pub fn exportToFile(self: Image, fileName: [:0]const u8) bool {
         return rl.exportImage(self, fileName);
     }
 
     /// Export image as code file defining an array of bytes, returns true on success
-    pub fn exportAsCode(self: Image, fileName: [*:0]const u8) bool {
+    pub fn exportAsCode(self: Image, fileName: [:0]const u8) bool {
         return rl.exportImageAsCode(self, fileName);
     }
 
@@ -1186,7 +1192,7 @@ pub const Texture = extern struct {
     mipmaps: c_int,
     format: PixelFormat,
 
-    pub fn init(fileName: [*:0]const u8) RaylibError!Texture {
+    pub fn init(fileName: [:0]const u8) RaylibError!Texture {
         return rl.loadTexture(fileName);
     }
 
@@ -1290,12 +1296,12 @@ pub const Font = extern struct {
     glyphs: [*c]GlyphInfo,
 
     /// Load font from file into GPU memory (VRAM)
-    pub fn init(fileName: [*:0]const u8) RaylibError!Font {
+    pub fn init(fileName: [:0]const u8) RaylibError!Font {
         return rl.loadFont(fileName);
     }
 
     /// Load font from file with extended parameters, use null for fontChars to load the default character set
-    pub fn initEx(fileName: [*:0]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
+    pub fn initEx(fileName: [:0]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
         return rl.loadFontEx(fileName, fontSize, fontChars);
     }
 
@@ -1305,7 +1311,7 @@ pub const Font = extern struct {
     }
 
     /// Load font from memory buffer, fileType refers to extension: i.e. '.ttf'
-    pub fn fromMemory(fileType: [*:0]const u8, fileData: ?[]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
+    pub fn fromMemory(fileType: [:0]const u8, fileData: ?[]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
         return rl.loadFontFromMemory(fileType, fileData, fontSize, fontChars);
     }
 
@@ -1320,7 +1326,7 @@ pub const Font = extern struct {
     }
 
     /// Export font as code file, returns true on success
-    pub fn exportAsCode(self: Font, fileName: [*:0]const u8) bool {
+    pub fn exportAsCode(self: Font, fileName: [:0]const u8) bool {
         return rl.exportFontAsCode(self, fileName);
     }
 };
@@ -1456,7 +1462,7 @@ pub const Model = extern struct {
     bindPose: [*c]Transform,
 
     /// Load model from file (meshes and materials)
-    pub fn init(fileName: [*:0]const u8) RaylibError!Model {
+    pub fn init(fileName: [:0]const u8) RaylibError!Model {
         return rl.loadModel(fileName);
     }
 
@@ -1813,37 +1819,7 @@ pub const MaterialMapIndex = enum(c_int) {
     brdf = 10,
 };
 
-pub const ShaderLocationIndex = enum(c_int) {
-    vertex_position = 0,
-    vertex_texcoord01 = 1,
-    vertex_texcoord02 = 2,
-    vertex_normal = 3,
-    vertex_tangent = 4,
-    vertex_color = 5,
-    matrix_mvp = 6,
-    matrix_view = 7,
-    matrix_projection = 8,
-    matrix_model = 9,
-    matrix_normal = 10,
-    vector_view = 11,
-    color_diffuse = 12,
-    color_specular = 13,
-    color_ambient = 14,
-    map_albedo = 15,
-    map_metalness = 16,
-    map_normal = 17,
-    map_roughness = 18,
-    map_occlusion = 19,
-    map_emission = 20,
-    map_height = 21,
-    map_cubemap = 22,
-    map_irradiance = 23,
-    map_prefilter = 24,
-    map_brdf = 25,
-    vertex_boneids = 26,
-    vertex_boneweights = 27,
-    bone_matrices = 28,
-};
+pub const ShaderLocationIndex = enum(c_int) { vertex_position = 0, vertex_texcoord01 = 1, vertex_texcoord02 = 2, vertex_normal = 3, vertex_tangent = 4, vertex_color = 5, matrix_mvp = 6, matrix_view = 7, matrix_projection = 8, matrix_model = 9, matrix_normal = 10, vector_view = 11, color_diffuse = 12, color_specular = 13, color_ambient = 14, map_albedo = 15, map_metalness = 16, map_normal = 17, map_roughness = 18, map_occlusion = 19, map_emission = 20, map_height = 21, map_cubemap = 22, map_irradiance = 23, map_prefilter = 24, map_brdf = 25, vertex_boneids = 26, vertex_boneweights = 27, bone_matrices = 28, shader_loc_vertex_instance_tx };
 
 pub const ShaderUniformDataType = enum(c_int) {
     float = 0,
@@ -1975,7 +1951,7 @@ pub const AudioCallback = ?*const fn (?*anyopaque, c_uint) callconv(.C) void;
 pub const RAYLIB_VERSION_MAJOR = @as(i32, 5);
 pub const RAYLIB_VERSION_MINOR = @as(i32, 5);
 pub const RAYLIB_VERSION_PATCH = @as(i32, 0);
-pub const RAYLIB_VERSION = "5.5";
+pub const RAYLIB_VERSION = "5.6-dev";
 
 pub const MAX_TOUCH_POINTS = 10;
 pub const MAX_MATERIAL_MAPS = 12;
@@ -1992,7 +1968,7 @@ pub fn setWindowIcons(images: []Image) void {
 }
 
 /// Load shader from files and bind default locations
-pub fn loadShader(vsFileName: ?[*:0]const u8, fsFileName: ?[*:0]const u8) RaylibError!Shader {
+pub fn loadShader(vsFileName: ?[:0]const u8, fsFileName: ?[:0]const u8) RaylibError!Shader {
     var vsFileNameFinal = @as([*c]const u8, 0);
     var fsFileNameFinal = @as([*c]const u8, 0);
     if (vsFileName) |vsFileNameSure| {
@@ -2007,7 +1983,7 @@ pub fn loadShader(vsFileName: ?[*:0]const u8, fsFileName: ?[*:0]const u8) Raylib
 }
 
 /// Load shader from code strings and bind default locations
-pub fn loadShaderFromMemory(vsCode: ?[*:0]const u8, fsCode: ?[*:0]const u8) RaylibError!Shader {
+pub fn loadShaderFromMemory(vsCode: ?[:0]const u8, fsCode: ?[:0]const u8) RaylibError!Shader {
     var vsCodeFinal = @as([*c]const u8, 0);
     var fsCodeFinal = @as([*c]const u8, 0);
     if (vsCode) |vsCodeSure| {
@@ -2021,63 +1997,24 @@ pub fn loadShaderFromMemory(vsCode: ?[*:0]const u8, fsCode: ?[*:0]const u8) Rayl
     return if (isValid) shader else RaylibError.LoadShader;
 }
 
-/// Load file data as byte array (read)
-pub fn loadFileData(fileName: [*:0]const u8) RaylibError![]u8 {
-    var bytesRead: i32 = 0;
-    var res: []u8 = undefined;
+pub fn loadRandomSequence(count: u32, min: i32, max: i32) []i32 {
+    var res: []i32 = undefined;
 
-    const ptr = cdef.LoadFileData(@as([*c]const u8, @ptrCast(fileName)), @as([*c]c_int, @ptrCast(&bytesRead)));
-    if (ptr == 0) return RaylibError.LoadFileData;
+    const ptr = cdef.LoadRandomSequence(@as(c_uint, @intCast(count)), @as(c_int, @intCast(min)), @as(c_int, @intCast(max)));
 
-    res.ptr = @as([*]u8, @ptrCast(ptr));
-    res.len = @as(usize, @intCast(bytesRead));
+    res.ptr = @as([*]i32, @ptrCast(ptr));
+    res.len = @as(usize, @intCast(count));
     return res;
 }
 
 /// Save data to file from byte array (write), returns true on success
-pub fn saveFileData(fileName: [*:0]const u8, data: []u8) bool {
+pub fn saveFileData(fileName: [:0]const u8, data: []u8) bool {
     return cdef.SaveFileData(@as([*c]const u8, @ptrCast(fileName)), @as(*anyopaque, @ptrCast(data.ptr)), @as(c_int, @intCast(data.len)));
 }
 
 /// Export data to code (.h), returns true on success
-pub fn exportDataAsCode(data: []const u8, fileName: [*:0]const u8) bool {
+pub fn exportDataAsCode(data: []const u8, fileName: [:0]const u8) bool {
     return cdef.ExportDataAsCode(@as([*c]const u8, @ptrCast(data)), @as(c_int, @intCast(data.len)), @as([*c]const u8, @ptrCast(fileName)));
-}
-
-/// Compress data (DEFLATE algorithm), memory must be MemFree()
-pub fn compressData(data: []const u8) []u8 {
-    var compDataSize: i32 = 0;
-    var res: []u8 = undefined;
-    res.ptr = cdef.CompressData(@as([*c]const u8, @ptrCast(data)), @as(c_int, @intCast(data.len)), @as([*c]c_int, @ptrCast(&compDataSize)));
-    res.len = @as(usize, @intCast(compDataSize));
-    return res;
-}
-
-/// Decompress data (DEFLATE algorithm), memory must be MemFree()
-pub fn decompressData(compData: []const u8) []u8 {
-    var dataSize: i32 = 0;
-    var res: []u8 = undefined;
-    res.ptr = cdef.DecompressData(@as([*c]const u8, @ptrCast(compData)), @as(c_int, @intCast(compData.len)), @as([*c]c_int, @ptrCast(&dataSize)));
-    res.len = @as(usize, @intCast(dataSize));
-    return res;
-}
-
-/// Encode data to Base64 string, memory must be MemFree()
-pub fn encodeDataBase64(data: []const u8) []u8 {
-    var outputSize: i32 = 0;
-    var res: []u8 = undefined;
-    res.ptr = cdef.EncodeDataBase64(@as([*c]const u8, @ptrCast(data)), @as(c_int, @intCast(data.len)), @as([*c]c_int, @ptrCast(&outputSize)));
-    res.len = @as(usize, @intCast(outputSize));
-    return res;
-}
-
-/// Decode Base64 string data, memory must be MemFree()
-pub fn decodeDataBase64(data: []const u8) []u8 {
-    var outputSize: i32 = 0;
-    var res: []u8 = undefined;
-    res.ptr = cdef.DecodeDataBase64(@as([*c]const u8, @ptrCast(data)), @as([*c]c_int, @ptrCast(&outputSize)));
-    res.len = @as(usize, @intCast(outputSize));
-    return res;
 }
 
 pub fn computeCRC32(data: []u8) u32 {
@@ -2095,21 +2032,21 @@ pub fn computeSHA1(data: []u8) [5]u32 {
 }
 
 /// Load image from file into CPU memory (RAM)
-pub fn loadImage(fileName: [*:0]const u8) RaylibError!Image {
+pub fn loadImage(fileName: [:0]const u8) RaylibError!Image {
     const image = cdef.LoadImage(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsImageValid(image);
     return if (isValid) image else RaylibError.LoadImage;
 }
 
 /// Load image from RAW file data
-pub fn loadImageRaw(fileName: [*:0]const u8, width: i32, height: i32, format: PixelFormat, headerSize: i32) RaylibError!Image {
+pub fn loadImageRaw(fileName: [:0]const u8, width: i32, height: i32, format: PixelFormat, headerSize: i32) RaylibError!Image {
     const image = cdef.LoadImageRaw(@as([*c]const u8, @ptrCast(fileName)), @as(c_int, width), @as(c_int, height), format, @as(c_int, headerSize));
     const isValid = cdef.IsImageValid(image);
     return if (isValid) image else RaylibError.LoadImage;
 }
 
 /// Load image sequence from file (frames appended to image.data)
-pub fn loadImageAnim(fileName: [*:0]const u8, frames: *i32) RaylibError!Image {
+pub fn loadImageAnim(fileName: [:0]const u8, frames: *i32) RaylibError!Image {
     const image = cdef.LoadImageAnim(@as([*c]const u8, @ptrCast(fileName)), @as([*c]c_int, @ptrCast(frames)));
     const isValid = cdef.IsImageValid(image);
     return if (isValid) image else RaylibError.LoadImage;
@@ -2129,21 +2066,21 @@ pub fn loadImageFromScreen() RaylibError!Image {
     return if (isValid) image else RaylibError.LoadImage;
 }
 
-pub fn loadImageAnimFromMemory(fileType: [*:0]const u8, fileData: []const u8, frames: *i32) RaylibError!Image {
+pub fn loadImageAnimFromMemory(fileType: [:0]const u8, fileData: []const u8, frames: *i32) RaylibError!Image {
     const image = cdef.LoadImageAnimFromMemory(@as([*c]const u8, @ptrCast(fileType)), @as([*c]const u8, @ptrCast(fileData)), @as(c_int, @intCast(fileData.len)), @as([*c]c_int, @ptrCast(frames)));
     const isValid = cdef.IsImageValid(image);
     return if (isValid) image else RaylibError.LoadImage;
 }
 
 /// Load image from memory buffer, fileType refers to extension: i.e. '.png'
-pub fn loadImageFromMemory(fileType: [*:0]const u8, fileData: []const u8) RaylibError!Image {
+pub fn loadImageFromMemory(fileType: [:0]const u8, fileData: []const u8) RaylibError!Image {
     const image = cdef.LoadImageFromMemory(@as([*c]const u8, @ptrCast(fileType)), @as([*c]const u8, @ptrCast(fileData)), @as(c_int, @intCast(fileData.len)));
     const isValid = cdef.IsImageValid(image);
     return if (isValid) image else RaylibError.LoadImage;
 }
 
 /// Create an image from text (default font)
-pub fn imageText(text: [*:0]const u8, fontSize: i32, color: Color) RaylibError!Image {
+pub fn imageText(text: [:0]const u8, fontSize: i32, color: Color) RaylibError!Image {
     // TODO: ImageText requires SUPPORT_MODULE_RTEXT. Error out if not loaded.
     const image = cdef.ImageText(@as([*c]const u8, @ptrCast(text)), @as(c_int, fontSize), color);
     const isValid = cdef.IsImageValid(image);
@@ -2151,7 +2088,7 @@ pub fn imageText(text: [*:0]const u8, fontSize: i32, color: Color) RaylibError!I
 }
 
 /// Create an image from text (custom sprite font)
-pub fn imageTextEx(font: Font, text: [*:0]const u8, fontSize: f32, spacing: f32, tint: Color) RaylibError!Image {
+pub fn imageTextEx(font: Font, text: [:0]const u8, fontSize: f32, spacing: f32, tint: Color) RaylibError!Image {
     // TODO: ImageTextEx requires SUPPORT_MODULE_RTEXT. Error out if not loaded.
     const image = cdef.ImageTextEx(font, @as([*c]const u8, @ptrCast(text)), fontSize, spacing, tint);
     const isValid = cdef.IsImageValid(image);
@@ -2170,21 +2107,8 @@ pub fn loadImageColors(image: Image) RaylibError![]Color {
     return res;
 }
 
-/// Load colors palette from image as a Color array (RGBA - 32bit)
-pub fn loadImagePalette(image: Image, maxPaletteSize: i32) RaylibError![]Color {
-    var colorCount: i32 = 0;
-    var res: []Color = undefined;
-
-    const ptr = cdef.LoadImagePalette(image, @as(c_int, maxPaletteSize), @as([*c]c_int, @ptrCast(&colorCount)));
-    if (ptr == 0) return RaylibError.LoadImagePalette;
-
-    res.ptr = @as([*]Color, @ptrCast(ptr));
-    res.len = @as(usize, @intCast(colorCount));
-    return res;
-}
-
 /// Load texture from file into GPU memory (VRAM)
-pub fn loadTexture(fileName: [*:0]const u8) RaylibError!Texture2D {
+pub fn loadTexture(fileName: [:0]const u8) RaylibError!Texture2D {
     const texture = cdef.LoadTexture(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsTextureValid(texture);
     return if (isValid) texture else RaylibError.LoadTexture;
@@ -2211,6 +2135,13 @@ pub fn loadRenderTexture(width: i32, height: i32) RaylibError!RenderTexture2D {
     return if (isValid) render_texture else RaylibError.LoadRenderTexture;
 }
 
+pub fn colorToInt(color: Color) i32 {
+    return if (@inComptime())
+        (@as(i32, color.r) << 24) | (@as(i32, color.g) << 16) | (@as(i32, color.b) << 8) | @as(i32, color.a)
+    else
+        @as(i32, cdef.ColorToInt(color));
+}
+
 /// Get the default Font
 pub fn getFontDefault() RaylibError!Font {
     // TODO: GetFontDefault requires SUPPORT_DEFAULT_FONT. Error out if unset.
@@ -2220,14 +2151,14 @@ pub fn getFontDefault() RaylibError!Font {
 }
 
 /// Load font from file into GPU memory (VRAM)
-pub fn loadFont(fileName: [*:0]const u8) RaylibError!Font {
+pub fn loadFont(fileName: [:0]const u8) RaylibError!Font {
     const font = cdef.LoadFont(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsFontValid(font);
     return if (isValid) font else RaylibError.LoadFont;
 }
 
 /// Load font from file with extended parameters, use null for fontChars to load the default character set
-pub fn loadFontEx(fileName: [*:0]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
+pub fn loadFontEx(fileName: [:0]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
     var fontCharsFinal = @as([*c]c_int, 0);
     var fontCharsLen: c_int = @as(c_int, 0);
     if (fontChars) |fontCharsSure| {
@@ -2240,7 +2171,7 @@ pub fn loadFontEx(fileName: [*:0]const u8, fontSize: i32, fontChars: ?[]i32) Ray
 }
 
 /// Load font from memory buffer, fileType refers to extension: i.e. '.ttf'
-pub fn loadFontFromMemory(fileType: [*:0]const u8, fileData: ?[]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
+pub fn loadFontFromMemory(fileType: [:0]const u8, fileData: ?[]const u8, fontSize: i32, fontChars: ?[]i32) RaylibError!Font {
     var fileDataFinal = @as([*c]const u8, 0);
     var fileDataLen: i32 = 0;
     if (fileData) |fileDataSure| {
@@ -2272,29 +2203,13 @@ pub fn loadFontData(fileData: []const u8, fontSize: i32, fontChars: []i32, ty: F
     return res;
 }
 
-/// Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
-pub fn loadCodepoints(text: [*:0]const u8) RaylibError![]i32 {
-    if (@sizeOf(c_int) != @sizeOf(i32)) {
-        @compileError("Can't cast pointer to c_int array to i32 because they don't have the same size");
-    }
-    var count: i32 = 0;
-    var res: []i32 = undefined;
-
-    const ptr = cdef.LoadCodepoints(@as([*c]const u8, @ptrCast(text)), @as([*c]c_int, @ptrCast(&count)));
-    if (ptr == 0) return RaylibError.LoadCodepoints;
-
-    res.ptr = @as([*]i32, @ptrCast(ptr));
-    res.len = @as(usize, @intCast(count));
-    return res;
-}
-
 /// Text formatting with variables (sprintf() style)
-pub fn textFormat(text: [*:0]const u8, args: anytype) [*:0]const u8 {
+pub fn textFormat(text: [:0]const u8, args: anytype) [:0]const u8 {
     comptime {
         const info = @typeInfo(@TypeOf(args));
         switch (info) {
-            .Struct => {
-                if (!info.Struct.is_tuple)
+            .@"struct" => {
+                if (!info.@"struct".is_tuple)
                     @compileError("Args should be in a tuple (call this function like textFormat(.{arg1, arg2, ...});)!");
             },
             else => {
@@ -2307,12 +2222,12 @@ pub fn textFormat(text: [*:0]const u8, args: anytype) [*:0]const u8 {
 }
 
 /// Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
-pub fn traceLog(logLevel: TraceLogLevel, text: [*:0]const u8, args: anytype) void {
+pub fn traceLog(logLevel: TraceLogLevel, text: [:0]const u8, args: anytype) void {
     comptime {
         const info = @typeInfo(@TypeOf(args));
         switch (info) {
-            .Struct => {
-                if (!info.Struct.is_tuple)
+            .@"struct" => {
+                if (!info.@"struct".is_tuple)
                     @compileError("Args should be in a tuple (call this function like traceLog(.{arg1, arg2, ...});)!");
             },
             else => {
@@ -2322,15 +2237,6 @@ pub fn traceLog(logLevel: TraceLogLevel, text: [*:0]const u8, args: anytype) voi
     }
 
     @call(.auto, cdef.TraceLog, .{ logLevel, @as([*c]const u8, @ptrCast(text)) } ++ args);
-}
-
-/// Split text into multiple strings
-pub fn textSplit(text: [*:0]const u8, delimiter: u8) [][*:0]const u8 {
-    var count: i32 = 0;
-    var res: [][*:0]const u8 = undefined;
-    res.ptr = @as([*][*:0]const u8, @ptrCast(cdef.TextSplit(@as([*c]const u8, @ptrCast(text)), delimiter, @as([*c]c_int, @ptrCast(&count)))));
-    res.len = @as(usize, @intCast(count));
-    return res;
 }
 
 /// Draw multiple mesh instances with material and different transforms
@@ -2346,7 +2252,7 @@ pub fn loadMaterialDefault() RaylibError!Material {
 }
 
 /// Load materials from model file
-pub fn loadMaterials(fileName: [*:0]const u8) RaylibError![]Material {
+pub fn loadMaterials(fileName: [:0]const u8) RaylibError![]Material {
     var materialCount: i32 = 0;
     var res: []Material = undefined;
 
@@ -2365,7 +2271,7 @@ pub fn loadMaterials(fileName: [*:0]const u8) RaylibError![]Material {
 }
 
 /// Load model from files (meshes and materials)
-pub fn loadModel(fileName: [*:0]const u8) RaylibError!Model {
+pub fn loadModel(fileName: [:0]const u8) RaylibError!Model {
     const model = cdef.LoadModel(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsModelValid(model);
     return if (isValid) model else RaylibError.LoadModel;
@@ -2378,40 +2284,27 @@ pub fn loadModelFromMesh(mesh: Mesh) RaylibError!Model {
     return if (isValid) model else RaylibError.LoadModel;
 }
 
-/// Load model animations from file
-pub fn loadModelAnimations(fileName: [*:0]const u8) RaylibError![]ModelAnimation {
-    var animCount: i32 = 0;
-    var res: []ModelAnimation = undefined;
-
-    const ptr = cdef.LoadModelAnimations(@as([*c]const u8, @ptrCast(fileName)), @as([*c]c_int, @ptrCast(&animCount)));
-    if (ptr == 0) return RaylibError.LoadModelAnimations;
-
-    res.ptr = @as([*]ModelAnimation, @ptrCast(ptr));
-    res.len = @as(usize, @intCast(animCount));
-    return res;
-}
-
 /// Unload animation data
 pub fn unloadModelAnimations(animations: []ModelAnimation) void {
     cdef.UnloadModelAnimations(@as([*c]ModelAnimation, @ptrCast(animations)), @as(c_int, @intCast(animations.len)));
 }
 
 /// Load sound from file
-pub fn loadSound(fileName: [*:0]const u8) RaylibError!Sound {
+pub fn loadSound(fileName: [:0]const u8) RaylibError!Sound {
     const sound = cdef.LoadSound(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsSoundValid(sound);
     return if (isValid) sound else RaylibError.LoadSound;
 }
 
 /// Load wave data from file
-pub fn loadWave(fileName: [*:0]const u8) RaylibError!Wave {
+pub fn loadWave(fileName: [:0]const u8) RaylibError!Wave {
     const wave = cdef.LoadWave(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsWaveValid(wave);
     return if (isValid) wave else RaylibError.LoadWave;
 }
 
 /// Load wave from memory buffer, fileType refers to extension: i.e. '.wav'
-pub fn loadWaveFromMemory(fileType: [*:0]const u8, fileData: []const u8) RaylibError!Wave {
+pub fn loadWaveFromMemory(fileType: [:0]const u8, fileData: []const u8) RaylibError!Wave {
     const wave = cdef.LoadWaveFromMemory(@as([*c]const u8, @ptrCast(fileType)), @as([*c]const u8, @ptrCast(fileData)), @as(c_int, @intCast(fileData.len)));
     const isValid = cdef.IsWaveValid(wave);
     return if (isValid) wave else RaylibError.LoadWave;
@@ -2426,14 +2319,14 @@ pub fn loadWaveSamples(wave: Wave) []f32 {
 }
 
 /// Load music stream from file
-pub fn loadMusicStream(fileName: [*:0]const u8) RaylibError!Music {
+pub fn loadMusicStream(fileName: [:0]const u8) RaylibError!Music {
     const music = cdef.LoadMusicStream(@as([*c]const u8, @ptrCast(fileName)));
     const isValid = cdef.IsMusicValid(music);
     return if (isValid) music else RaylibError.LoadMusic;
 }
 
 /// Load music stream from data
-pub fn loadMusicStreamFromMemory(fileType: [*:0]const u8, data: []const u8) RaylibError!Music {
+pub fn loadMusicStreamFromMemory(fileType: [:0]const u8, data: []const u8) RaylibError!Music {
     const music = cdef.LoadMusicStreamFromMemory(@as([*c]const u8, @ptrCast(fileType)), @as([*c]const u8, @ptrCast(data)), @as(c_int, @intCast(data.len)));
     const isValid = cdef.IsMusicValid(music);
     return if (isValid) music else RaylibError.LoadMusic;
@@ -2513,13 +2406,13 @@ pub fn drawTextCodepoints(font: Font, codepoints: []const c_int, position: Vecto
 }
 
 /// Load UTF-8 text encoded from codepoints array
-pub fn loadUTF8(codepoints: []const c_int) [*:0]u8 {
+pub fn loadUTF8(codepoints: []const c_int) [:0]u8 {
     return std.mem.span(cdef.LoadUTF8(@as([*c]const c_int, @ptrCast(codepoints)), @as(c_int, @intCast(codepoints.len))));
 }
 
 /// Join text strings with delimiter
-pub fn textJoin(textList: [][*:0]const u8, delimiter: [*:0]const u8) [*:0]const u8 {
-    return std.mem.span(cdef.TextJoin(@as([*c][*c]const u8, @ptrCast(textList)), @as(c_int, @intCast(textList.len)), @as([*c]const u8, @ptrCast(delimiter))));
+pub fn textJoin(textList: [][:0]u8, delimiter: [:0]const u8) [:0]const u8 {
+    return std.mem.span(cdef.TextJoin(@as([*c][*c]u8, @ptrCast(textList)), @as(c_int, @intCast(textList.len)), @as([*c]const u8, @ptrCast(delimiter))));
 }
 
 /// Draw a triangle strip defined by points
@@ -2528,24 +2421,33 @@ pub fn drawTriangleStrip3D(points: []const Vector3, color: Color) void {
 }
 
 /// Internal memory allocator
-fn alloc(_: *anyopaque, len: usize, _: u8, _: usize) ?[*]u8 {
+fn alloc(_: *anyopaque, len: usize, _: std.mem.Alignment, _: usize) ?[*]u8 {
     std.debug.assert(len > 0);
     return @ptrCast(cdef.MemAlloc(@intCast(len)));
 }
 
-fn resize(_: *anyopaque, buf: []u8, _: u8, new_len: usize, _: usize) bool {
+fn resize(_: *anyopaque, buf: []u8, _: std.mem.Alignment, new_len: usize, _: usize) bool {
     return (new_len <= buf.len);
 }
 
 /// Internal memory free
-fn free(_: *anyopaque, buf: []u8, _: u8, _: usize) void {
+fn free(_: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
     cdef.MemFree(buf.ptr);
+}
+
+fn remap(_: *anyopaque, buf: []u8, _: std.mem.Alignment, new_len: usize, _: usize) ?[*]u8 {
+    if (new_len <= buf.len) {
+        return buf.ptr;
+    } else {
+        return null;
+    }
 }
 
 const mem_vtable = std.mem.Allocator.VTable{
     .alloc = alloc,
     .resize = resize,
     .free = free,
+    .remap = remap,
 };
 
 pub const mem = std.mem.Allocator{
